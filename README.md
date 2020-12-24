@@ -30,10 +30,10 @@ Run the setup script:
 ```
 
 Source your bash profile (either `~/.profile` on Debian/Ubuntu or 
-`~/.bash_profile` on MacOS/CentOS/Fedora/Red Hat):
+`~/.bash_profile` on MacOS/CentOS/Fedora/Red Hat; this command covers both):
 
 ```
-(test -r ~/.bash_profile && source ~/.bash_profile) || source ~/.bash_profile
+(test -r ~/.bash_profile && source ~/.bash_profile) || source ~/.profile
 ```
 
 Now, you can delete the repository, and you're good to go:
