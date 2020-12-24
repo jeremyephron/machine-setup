@@ -33,7 +33,7 @@ Source your bash profile (either `~/.profile` on Debian/Ubuntu or
 `~/.bash_profile` on MacOS/CentOS/Fedora/Red Hat):
 
 ```
-source ~/.profile # or ~/.bash_profile
+(test -r ~/.bash_profile && source ~/.bash_profile) || source ~/.bash_profile
 ```
 
 Now, you can delete the repository, and you're good to go:
