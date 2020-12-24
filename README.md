@@ -4,9 +4,14 @@ machine-setup
 Sets up a machine environment from a clean install.
 
 I end up on new machines all the time and need to reinstall the same things 
-over again, copy settings files, etc. This repo is my solution. To run it, you 
-need to get the repository over to the machine, most of which come with `git` 
-preinstalled:
+over again, copy settings files, etc. This repo is my solution. Everything 
+here is my personal files and preferences, so you may not want to use them 
+(though I think my Vim setup is pretty nice!). That being said, you may still 
+find this repo useful to co-opt for your own purposes or as an example of 
+various things (like a great [.vimrc](resources/vim/.vimrc) file!).
+
+To run it, you need to get the repository over to the machine, most of which 
+come with `git` preinstalled:
 
 ```
 git clone https://github.com/jeremyephron/machine-setup
