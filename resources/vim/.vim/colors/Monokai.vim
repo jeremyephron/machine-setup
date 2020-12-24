@@ -1,6 +1,6 @@
 " Vim color file
 " Author: Erichain
-" Colorscheme Name: monokai_pro
+" Colorscheme Name: Monokai
 " Inspired by https://www.monokai.pro/
 " Edits by Jeremy Barenholtz
 
@@ -12,7 +12,7 @@ if exists("syntax_on")
 endif
 
 set t_Co=256
-let g:colors_name = "monokai_pro"
+let g:colors_name = "Monokai"
 
 hi Cursor ctermfg=236 ctermbg=236 cterm=NONE guibg=#ffffff guifg=#ffffff guisp=NONE gui=NONE
 hi Visual ctermfg=NONE ctermbg=239 cterm=NONE guibg=#4e4e4e guifg=NONE guisp=NONE gui=NONE

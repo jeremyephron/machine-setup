@@ -22,7 +22,7 @@ install_vim() {
 }
 
 configure_vim() {
-  echo "-- Configuring Vim (will not overwrite existing ~/.vimrc or ~/.vim/..."
+  echo "-- Configuring Vim (will not overwrite existing ~/.vimrc or ~/.vim/)..."
 
   cp -n "${RESOUCES_DIR}/vim/.vimrc" ~/.vimrc
   cp -nr "${RESOUCES_DIR}/vim/.vim" ~/.vim

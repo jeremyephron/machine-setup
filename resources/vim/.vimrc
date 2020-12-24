@@ -40,3 +40,27 @@ augroup global
     autocmd!
     autocmd BufRead,BufNewFile *.h set filetype=c
 augroup END
+
+" Autoinstall vim-plug
+if empty(glob('~/.vim/autoload/plug.vim'))
+  silent !curl -fLo ~/.vim/autoload/plug.vim --create-dirs
+    \ https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+  autocmd VimEnter * PlugInstall --sync | source $MYVIMRC
+endif
+
+" Run PlugInstall if there are missing plugins
+autocmd VimEnter * if len(filter(values(g:plugs), '!isdirectory(v:val.dir)'))
+  \| PlugInstall --sync | source $MYVIMRC
+\| endif
+
+" Specify plugin directory
+call plug#begin('~/.vim/plugged')
+
+" FZF 
+Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
+
+" Initialize the plugin system
+call plug#end()
+
+" FZF file searching with CTRL-L
+nnoremap <C-L> :FZF<CR>
