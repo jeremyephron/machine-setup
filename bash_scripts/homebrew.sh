@@ -19,13 +19,12 @@ install_homebrew() {
   HOMEBREW_INSTALL_URL="https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh"
   NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL ${HOMEBREW_INSTALL_URL})"
 
-  # Add Homebrew to path and profile script
+  # Add Homebrew to path
   test -d ~/.linuxbrew && eval $(~/.linuxbrew/bin/brew shellenv)
   test -d /home/linuxbrew/.linuxbrew && eval $(/home/linuxbrew/.linuxbrew/bin/brew shellenv)
-  test -r ~/.bash_profile && echo "eval \$($(brew --prefix)/bin/brew shellenv)" >>~/.bash_profile
-  test -r ~/.profile && echo "eval \$($(brew --prefix)/bin/brew shellenv)" >>~/.profile
 
   echo "-- Homebrew has been installed"
 }
 
 install_homebrew
+add_to_bash_profile "# Add homebrew to environment" "eval \$($(brew --prefix)/bin/brew shellenv)"
