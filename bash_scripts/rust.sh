@@ -8,7 +8,7 @@
 # Rust language
 
 brew_install rustup
-if ! exec_exists rustc || ! exec_exists cargo; then
+if exec_exists rustc && exec_exists cargo; then
   echo "-- Rust is already installed"
 else
   echo "-- Installing Rust..."
