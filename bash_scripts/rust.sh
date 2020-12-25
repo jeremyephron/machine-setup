@@ -8,5 +8,13 @@
 # Rust language
 
 brew_install rustup
-echo "1" | rustup-init
-source $HOME/.cargo/env
+if ! exec_exists rustc || ! exec_exists cargo; then
+  echo "-- Rust is already installed"
+else
+  echo "-- Installing Rust..."
+
+  echo "1" | rustup-init
+  source $HOME/.cargo/env
+
+  echo "-- Rust has been installed"
+fi

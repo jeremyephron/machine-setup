@@ -34,9 +34,9 @@ brew_install() {
   FORMULA=$1
   NAME=$1
   CASK=""
-  if [[ $# > 1 ]]; then
+  if [[ $# -gt 1 ]]; then
     NAME=$2
-    if [[ $# > 2 ]]; then
+    if [[ $# -gt 2 ]]; then
       CASK=$3
     fi
   fi
@@ -52,7 +52,7 @@ brew_install() {
     brew install --build-from-source ${FORMULA} && brew link ${FORMULA}
   fi
   
-  if [[ $? = 0 ]]; then
+  if [[ $? -eq 0 ]]; then
     echo "-- ${NAME} has been installed"
   else
     echo "-- ${NAME} could not be installed"
@@ -68,7 +68,7 @@ is_installed_with_pip() {
 pip_install() {
   PACKAGE=$1
   NAME=$1
-  if [[ $# > 1 ]]; then
+  if [[ $# -gt 1 ]]; then
     NAME=$2
   fi
 
@@ -81,7 +81,7 @@ pip_install() {
 
   python3 -m pip install ${PACKAGE}
 
-  if [[ $? = 0 ]]; then
+  if [[ $? -eq 0 ]]; then
     echo "-- ${NAME} has been installed"
   else
     echo "-- ${NAME} could not be installed"
