@@ -9,6 +9,6 @@
 
 brew_install openjdk Java
 
-if [[ -n ${SETUP_ON_LINUX} ]]; then
+if [[ -n ${SETUP_ON_LINUX-} ]]; then
   add_to_bash_profile '# Add java to path' 'export PATH=$PATH:$HOMEBREW_PREFIX/opt/openjdk/bin/'
 fi
