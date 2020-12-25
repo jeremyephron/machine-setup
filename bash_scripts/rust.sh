@@ -7,4 +7,6 @@
 
 # Rust language
 
-brew_install rust Rust
+brew_install rustup
+echo "1" | rustup-init
+source $HOME/.cargo/env
