@@ -56,11 +56,11 @@ If I wanted to avoid installing LaTeX for instance, I could run:
 DISABLE_LATEX=1 ./setup.sh
 ```
 
-If I just wanted to do some quick editing, maybe I only need my Vim files set 
-up. So I can run:
+If I just wanted to do some quick editing, maybe I only need my Vim files and 
+Homebrew set up. So I can run:
 
 ```
-ENABLE=1 ENABLE_VIM=1 ./setup.sh
+ENABLE=1 ENABLE_HOMEBREW=1 ENABLE_VIM=1 ./setup.sh
 ```
 
 where `ENABLE=1` tells the script to only run components that are explicitly 
