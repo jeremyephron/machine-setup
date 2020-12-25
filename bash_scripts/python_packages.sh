@@ -21,4 +21,3 @@ pip_install jupyter "Jupyter Notebook"
 pip_install requests Requests
 pip_install pillow Pillow
 pip_install beautifulsoup4 BeautifulSoup
-pip_install selenium "Selenium Web Driver"
