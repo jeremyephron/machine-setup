@@ -6,4 +6,5 @@ set expandtab
 
 set colorcolumn=80
 
-nnoremap ,b :w <Bar> !python3 %!<CR>     " run the current file
+" Run the current file
+nnoremap ,b :w <Bar> !python3 %<CR>
