@@ -69,6 +69,9 @@ Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
 " NerdTree
 Plug 'preservim/nerdtree'
 
+" TagBar
+Plug 'preservim/tagbar'
+
 " Initialize the plugin system
 call plug#end()
 
@@ -77,3 +80,6 @@ nnoremap <Leader>l :FZF<CR>
 
 " Toggle NerdTree with ,T
 nnoremap <Leader>t :NERDTreeToggle<CR>
+
+" Toggle Tagbar with ,B
+nnoremap <Leader>b :TagbarToggle<CR>
