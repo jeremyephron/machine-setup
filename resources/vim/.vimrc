@@ -8,6 +8,10 @@ set exrc secure " source local .vimrc file if present
 set number " line numbers
 
 set mouse=a " enable mouse
+if &term =~ '^screen'
+    " tmux knows the extended mouse mode
+    set ttymouse=xterm2
+endif
 
 set backspace=indent,eol,start
 
@@ -31,6 +35,9 @@ set statusline+=\ (%l,%c) " line number, col number
 set hlsearch  " highlight found words on search
 set incsearch " jump to best fit
 set showmatch " highlight matching parentheses
+
+set showcmd " show commands as they are typed
+let mapleader = "," " set leader key to comma
 
 " Turn off search highlighting with <CR> (return).
 nnoremap <CR> :nohlsearch<CR><CR>
@@ -59,8 +66,14 @@ call plug#begin('~/.vim/plugged')
 " FZF 
 Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
 
+" NerdTree
+Plug 'preservim/nerdtree'
+
 " Initialize the plugin system
 call plug#end()
 
-" FZF file searching with CTRL-L
-nnoremap <C-L> :FZF<CR>
+" FZF file searching with ,L
+nnoremap <Leader>l :FZF<CR>
+
+" Toggle NerdTree with ,T
+nnoremap <Leader>t :NERDTreeToggle<CR>
