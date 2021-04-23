@@ -22,7 +22,7 @@ set expandtab     " tab becomes spaces
 set autoindent    " applies indent of current line to the next one
 set smartindent   " reacts to syntax/style of code
 
-set colorcolumn=80,100 " ruler at col 80
+set colorcolumn=80,100 " ruler at col 80 and 100
 set cursorline " highlight current line
 
 set laststatus=2          " make statusline appear even with single window
@@ -83,3 +83,6 @@ nnoremap <Leader>t :NERDTreeToggle<CR>
 
 " Toggle Tagbar with ,B
 nnoremap <Leader>b :TagbarToggle<CR>
+
+" Set syntax highlighting for personal extensions
+" autocmd BufNewFile,BufRead *.howto set filetype=text
