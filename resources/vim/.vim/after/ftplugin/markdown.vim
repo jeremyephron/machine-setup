@@ -5,4 +5,4 @@ set softtabstop=4
 set shiftwidth=4
 
 set colorcolumn=80
-set textwidth=80
+set textwidth=79
