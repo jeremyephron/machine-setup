@@ -7,4 +7,4 @@
 
 # gcc
 
-brew_install gcc GCC
+brew_install gcc
