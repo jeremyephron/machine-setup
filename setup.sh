@@ -22,6 +22,10 @@ if should_run HOMEBREW; then
   source "${BASH_SCRIPTS_DIR}/homebrew.sh"
 fi
 
+if should_run NVIM; then
+  source "${BASH_SCRIPTS_DIR}/nvim.sh"
+fi
+
 if should_run VIM; then
   source "${BASH_SCRIPTS_DIR}/vim.sh"
 fi
