@@ -1,6 +1,27 @@
 #!/bin/bash
 set -u # treat unset variables as error
 
+if [ $# -gt 0 ] && ([ "$1" == "?" ] || [ "$1" == "--help" ]); then
+  msg="Components:\n"
+  msg+="  - BASH_MISC\n"
+  msg+="  - HOMEBREW\n"
+  msg+="  - GCC\n"
+  msg+="  - GIT\n"
+  msg+="  - NVIM\n"
+  msg+="  - VIM\n"
+  msg+="  - FZF\n"
+  msg+="  - NNN\n"
+  msg+="  - TREE\n"
+  msg+="  - LATEX\n"
+  msg+="  - PYTHON\n"
+  msg+="  - NODEJS\n"
+  msg+="  - RUST\n"
+  msg+="  - JAVA\n"
+
+  printf "${msg}"
+  exit 0
+fi
+
 # Variables
 SOURCE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 BASH_SCRIPTS_DIR="${SOURCE_DIR}/bash_scripts"
@@ -20,6 +41,10 @@ fi
 
 if should_run HOMEBREW; then
   source "${BASH_SCRIPTS_DIR}/homebrew.sh"
+fi
+
+if should_run GCC; then
+  source "${BASH_SCRIPTS_DIR}/gcc.sh"
 fi
 
 if should_run NVIM; then
