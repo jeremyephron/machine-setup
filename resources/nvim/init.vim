@@ -1,25 +1,10 @@
-"set nocompatible
-"filetype off
-"
-"" set the runtime path to include Vundle and initialize
-"set rtp+=~/.vim/bundle/Vundle.vim
-"call vundle#begin()
-"
-"" let Vundle manage Vundle, required
-"Plugin 'VundleVim/Vundle.vim'
-"
-"Plugin 'valloric/youcompleteme'
-"
-"" All of your Plugins must be added before the following line
-"call vundle#end()            " required
-
 filetype plugin indent on    " required
 syntax on
 
 colorscheme Monokai
 
-" set exrc secure " source local .vimrc file if present
-" 
+set exrc secure " source local init.vim file if present
+
 set number " line numbers
 
 set mouse=a " enable mouse
@@ -54,6 +39,9 @@ set showmatch " highlight matching parentheses
 set showcmd " show commands as they are typed
 let mapleader = "," " set leader key to comma
 
+" Remove trailing whitespace
+autocmd BufWritePre * :%s/\s\+$//e
+
 " Turn off search highlighting with <CR> (return).
 nnoremap <CR> :nohlsearch<CR><CR>
 
@@ -79,6 +67,8 @@ autocmd VimEnter * if len(filter(values(g:plugs), '!isdirectory(v:val.dir)'))
 call plug#begin()
   " Built-in LSP
   Plug 'neovim/nvim-lspconfig'
+
+  Plug 'kabouzeid/nvim-lspinstall'
 
   " Neovim Completion Manager
   Plug 'ncm2/ncm2'
@@ -109,23 +99,11 @@ call plug#begin()
   " telescope
   Plug 'nvim-telescope/telescope.nvim'
 
-" FZF 
-" Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
+  " NerdTree
+  Plug 'preservim/nerdtree'
 
-" YouCompleteMe
-" Plug 'ycm-core/youcompleteme'
-
-" Syntax checking
-" Plug 'vim-syntastic/syntastic'
-
-" Python syntax checking flake8
-" Plug 'nvie/vim-flake8'
-
-" NerdTree
-" Plug 'preservim/nerdtree'
-
-" TagBar
-" Plug 'preservim/tagbar'
+  " TagBar
+  Plug 'preservim/tagbar'
 
 " Initialize the plugin system
 call plug#end()
@@ -141,6 +119,22 @@ require'nvim-treesitter.configs'.setup {
 }
 
 -- LSP
+local function setup_servers()
+  require'lspinstall'.setup()
+  local servers = require'lspinstall'.installed_servers()
+  for _, server in pairs(servers) do
+    require'lspconfig'[server].setup{}
+  end
+end
+
+setup_servers()
+
+-- Automatically reload after `:LspInstall <server>` so we don't have to restart neovim
+require'lspinstall'.post_install_hook = function ()
+  setup_servers() -- reload installed servers
+  vim.cmd("bufdo e") -- this triggers the FileType autocmd that starts the server
+end
+
 require'lspconfig'.bashls.setup {
   cmd_env = {
     GLOB_PATTERN = "**/*@(.sh|.inc|.bash|.command)"
@@ -212,27 +206,18 @@ vim.api.nvim_set_keymap("i", "<Tab>", "v:lua.tab_complete()", {expr = true})
 vim.api.nvim_set_keymap("s", "<Tab>", "v:lua.tab_complete()", {expr = true})
 vim.api.nvim_set_keymap("i", "<S-Tab>", "v:lua.s_tab_complete()", {expr = true})
 vim.api.nvim_set_keymap("s", "<S-Tab>", "v:lua.s_tab_complete()", {expr = true})
-
 EOF
 
-" 
-" " FZF file searching with ,L
-" nnoremap <Leader>l :FZF<CR>
-" 
-" let g:fzf_action = {
-"     \ 'enter': 'drop',
-"     \ 'ctrl-t': 'tab drop',
-"     \ 'ctrl-x': 'split',
-"     \ 'ctrl-v': 'vsplit' }
-" 
-" let g:ycm_global_ycm_extra_conf = '$HOME/.vim/plugged/youcompleteme/third_party/ycmd/.ycm_extra_conf.py'
-" let g:ycm_show_diagnostics_ui = 0
-" 
-" " Toggle NerdTree with ,T
-" nnoremap <Leader>t :NERDTreeToggle<CR>
-" 
-" " Toggle Tagbar with ,B
-" nnoremap <Leader>b :TagbarToggle<CR>
-" 
-" " Set syntax highlighting for personal extensions
-" " autocmd BufNewFile,BufRead *.howto set filetype=text
+" Telescope hotkeys
+nnoremap <Leader><Leader> :Telescope<CR>
+nnoremap <Leader>f :Telescope find_files<CR>
+nnoremap <Leader>g :Telescope live_grep<CR>
+
+" Toggle NerdTree with ,T
+nnoremap <Leader>t :NERDTreeToggle<CR>
+"
+" Toggle Tagbar with ,B
+nnoremap <Leader>b :TagbarToggle<CR>
+
+" Set syntax highlighting for personal extensions
+" autocmd BufNewFile,BufRead *.howto set filetype=text

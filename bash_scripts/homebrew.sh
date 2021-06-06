@@ -5,7 +5,7 @@
 #     Homebrew     #
 ####################
 
-# Homebrew is a wonderful package manager and the first thing I would install 
+# Homebrew is a wonderful package manager and the first thing I would install
 # on any machine.
 
 install_homebrew() {
@@ -17,7 +17,7 @@ install_homebrew() {
   echo "-- Installing Homebrew..."
 
   HOMEBREW_INSTALL_URL="https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh"
-  NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL ${HOMEBREW_INSTALL_URL})"
+  /bin/bash -c "$(curl -fsSL ${HOMEBREW_INSTALL_URL})"
 
   # Add Homebrew to path
   test -d ~/.linuxbrew && eval $(~/.linuxbrew/bin/brew shellenv)
