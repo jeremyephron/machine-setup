@@ -22,8 +22,10 @@ set expandtab     " tab becomes spaces
 set autoindent    " applies indent of current line to the next one
 set smartindent   " reacts to syntax/style of code
 
-set colorcolumn=80,100 " ruler at col 80 and 100
+set colorcolumn=80,100,120 " ruler at col 80 and 100
 set cursorline " highlight current line
+
+set clipboard=unnamedplus " use system clipboard
 
 set laststatus=2          " make statusline appear even with single window
 set statusline=%f         " filename
@@ -66,11 +68,13 @@ autocmd VimEnter * if len(filter(values(g:plugs), '!isdirectory(v:val.dir)'))
 " " Specify plugin directory
 call plug#begin()
   " Built-in LSP
+  "   run `:help lsp` for more information
   Plug 'neovim/nvim-lspconfig'
 
   Plug 'kabouzeid/nvim-lspinstall'
 
   " Neovim Completion Manager
+  "   run `:help ncm2` for more information
   Plug 'ncm2/ncm2'
   Plug 'roxma/nvim-yarp'
 
@@ -88,22 +92,42 @@ call plug#begin()
 
   " Treesitter
   Plug 'nvim-treesitter/nvim-treesitter', {'do': ':TSUpdate'}
+  Plug 'nvim-treesitter/nvim-treesitter-refactor'
   Plug 'nvim-treesitter/playground'
 
   " nvim-compe
+  "   run `:help compe` for more information
   Plug 'hrsh7th/nvim-compe'
 
-  " dependencies
+  " Telescope
+  "   run `:help telescope` for more information
+
+  "" Dependencies
   Plug 'nvim-lua/popup.nvim'
   Plug 'nvim-lua/plenary.nvim'
-  " telescope
+
   Plug 'nvim-telescope/telescope.nvim'
 
-  " NerdTree
+  " NerdTree (file browser)
+  "   run `:help nerdtree` for more information
   Plug 'preservim/nerdtree'
 
-  " TagBar
+  " TagBar (browse tags of source code files)
+  "   run `:help tagbar` for more information
   Plug 'preservim/tagbar'
+
+  " Fugitive (git wrapper for vim)
+  "   run `:help fugitive` for more information
+  Plug 'tpope/vim-fugitive'
+
+  " NNN (NNN file picker)
+  "   run `:help nnn` for more information
+  Plug 'mcchrish/nnn.vim'
+
+  " FZF
+  "   run `:help fzf` for more information
+  Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
+  Plug 'junegunn/fzf.vim'
 
 " Initialize the plugin system
 call plug#end()
@@ -116,30 +140,32 @@ require'nvim-treesitter.configs'.setup {
     enable = false,              -- false will disable the whole extension
     -- disable = { "c", "rust" },  -- list of language that will be disabled
   },
+  refactor = {
+    smart_rename = {
+      enable = true,
+      keymaps = {
+        smart_rename = "grr",
+      },
+    },
+  },
 }
 
--- LSP
-local function setup_servers()
-  require'lspinstall'.setup()
-  local servers = require'lspinstall'.installed_servers()
-  for _, server in pairs(servers) do
-    require'lspconfig'[server].setup{}
-  end
-end
+--[[ LSP ]]
 
-setup_servers()
+local lspconfig = require'lspconfig'
 
--- Automatically reload after `:LspInstall <server>` so we don't have to restart neovim
-require'lspinstall'.post_install_hook = function ()
-  setup_servers() -- reload installed servers
-  vim.cmd("bufdo e") -- this triggers the FileType autocmd that starts the server
-end
+--- ccls for C/C++
+lspconfig.ccls.setup{}
 
-require'lspconfig'.bashls.setup {
+--- bashls for Bash scripts
+lspconfig.bashls.setup{
   cmd_env = {
     GLOB_PATTERN = "**/*@(.sh|.inc|.bash|.command)"
   }
 }
+
+--- pylsp for Python
+lspconfig.pylsp.setup{}
 
 vim.o.completeopt = "menuone,noselect"
 
@@ -163,8 +189,6 @@ require'compe'.setup {
     calc = true;
     nvim_lsp = true;
     nvim_lua = true;
-    vsnip = true;
-    ultisnips = true;
   };
 }
 
@@ -206,17 +230,49 @@ vim.api.nvim_set_keymap("i", "<Tab>", "v:lua.tab_complete()", {expr = true})
 vim.api.nvim_set_keymap("s", "<Tab>", "v:lua.tab_complete()", {expr = true})
 vim.api.nvim_set_keymap("i", "<S-Tab>", "v:lua.s_tab_complete()", {expr = true})
 vim.api.nvim_set_keymap("s", "<S-Tab>", "v:lua.s_tab_complete()", {expr = true})
+
+local nnn_actions = {};
+nnn_actions['<C-T>'] = 'tab drop';
+nnn_actions['<C-X>'] = 'split';
+nnn_actions['<C-V>'] = 'vsplit';
+require('nnn').setup{
+  action = nnn_actions,
+  session = 'global',
+  layout = { window = { width = 0.9, height = 0.6, highlight = 'Debug' } }
+}
 EOF
 
-" Telescope hotkeys
+" HotKeys
+"   Can see keybindings with `:Telescope keymaps`
+
+"" Run Telescope with ,,
 nnoremap <Leader><Leader> :Telescope<CR>
-nnoremap <Leader>f :Telescope find_files<CR>
+
+"" I prefer to use FZF for finding files. Can always access this through
+"" Telescope
+" nnoremap <Leader>f :Telescope find_files<CR>
+"" Run FZF with ,f
+nnoremap <Leader>f :FZF<CR>
+
+"" Run Telescope live grep with ,g
 nnoremap <Leader>g :Telescope live_grep<CR>
 
-" Toggle NerdTree with ,T
+"" Run Telescope LSP definitions with ,d
+nnoremap <Leader>d :Telescope lsp_definitions<CR>
+
+"" Run Telescope LSP references with ,r
+nnoremap <Leader>r :Telescope lsp_references<CR>
+
+"" Run Telescope TreeSitter with ,s
+nnoremap <Leader>s :Telescope treesitter<CR>
+
+"" Run NnnPicker with ,n
+nnoremap <Leader>n :NnnPicker<CR>
+
+"" Toggle NerdTree with ,t
 nnoremap <Leader>t :NERDTreeToggle<CR>
-"
-" Toggle Tagbar with ,B
+
+"" Toggle Tagbar with ,b
 nnoremap <Leader>b :TagbarToggle<CR>
 
 " Set syntax highlighting for personal extensions
