@@ -6,6 +6,7 @@
 - Install Brave browser
   - Install Bitwarden extension
   - Install Vimium extension
+  - Install Video Speed Controller extension
 - Install Neovim
 - (macOS) Install Rectangle
 
