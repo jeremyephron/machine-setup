@@ -1,3 +1,14 @@
+# New Machine Setup
+
+## Minimal Items
+
+- (macOS) Install Homebrew
+- Install Brave browser
+  - Install Bitwarden extension
+  - Install Vimium extension
+- Install Neovim
+- (macOS) Install Rectangle
+
 System76, Ubuntu 20.04
 
 - `sudo apt update && sudo apt-get update`
