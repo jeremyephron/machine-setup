@@ -1,169 +1,100 @@
-machine-setup
-=============
+# Jeremy's machine setup
 
-Sets up a machine environment from a clean install.
+This repository turns a fresh Apple silicon Mac or Ubuntu 24.04+ machine into
+Jeremy's working environment. It also converges an existing machine safely:
+preview first, install missing pieces without blanket upgrades, and keep every
+removal in a separate confirmed cleanup workflow.
 
-I end up on new machines all the time and need to reinstall the same things 
-over again, copy settings files, etc. This repo is my solution. Everything 
-here is my personal files and preferences, so you may not want to use them 
-(though I think my Vim setup is pretty nice!). That being said, you may still 
-find this repo useful to co-opt for your own purposes or as an example of 
-various things (like a great [.vimrc](resources/vim/.vimrc) file!).
+The fast path delivers Bash, Git/SSH, Neovim, tmux, the preferred command-line
+tools, managed configuration, and applicable macOS preferences. A full profile
+continues with the selected language runtimes, infrastructure tools, desktop
+apps, and LaTeX. The target is a useful core in well under 20 minutes; app
+downloads and TeX can continue after that depending on the network.
 
-To run it, you need to get the repository over to the machine, most of which 
-come with `git` preinstalled:
+## Start a new machine
 
-```
-git clone https://github.com/jeremyephron/machine-setup
-```
+After the OS account, network, and Bitwarden are ready:
 
-Navigate to the repository:
-
-```
-cd machine-setup
-```
-
-Run the setup script:
-
-```
-./setup.sh
+```bash
+mkdir -p "$HOME/src/personal"
+git clone https://github.com/jeremyephron/machine-setup.git "$HOME/src/personal/machine-setup"
+cd "$HOME/src/personal/machine-setup"
+./setup.sh apply --core-only
+./setup.sh doctor --core-only
+./setup.sh apply
+./setup.sh doctor
 ```
 
-Source your bashrc and bash profile (either `~/.profile` on Debian/Ubuntu or 
-`~/.bash_profile` on MacOS/CentOS/Fedora/Red Hat; this command covers both):
+The first run asks for a machine profile and local-only identity values. The
+selected profile is saved, so later commands can omit `--profile`. The first two
+commands establish and verify the fast terminal/editor baseline; the last two
+install and verify the full profile. Re-running `apply` is expected and safe.
 
-```
-source ~/.bashrc
-(test -r ~/.bash_profile && source ~/.bash_profile) || source ~/.profile
-```
+On an existing machine, begin with a read-only preview:
 
-Now, you can delete the repository, and you're good to go:
-
-```
-cd .. && rm -rf machine-setup
+```bash
+./setup.sh plan
 ```
 
-Configuring the Setup
----------------------
+If the machine has no saved profile yet, the command asks you to select one.
 
-This setup script installs a lot of stuff that I may not want all the time.
-For this reason you can disable specific components or enable only the 
-components you need.
+## Commands
 
-If I wanted to avoid installing LaTeX for instance, I could run:
+| Command | Purpose | Changes data? |
+| --- | --- | --- |
+| `plan` | Show the profile, package gaps, and chezmoi diff when initialized | No |
+| `apply` | Install missing items and preview/apply managed-file changes | Yes |
+| `doctor` | Check the machine and list manual follow-ups | No |
+| `update` | Explicitly upgrade packages and refresh verified locks | Yes |
+| `identities` | Reuse or generate per-account SSH keys and guide GPG setup | Yes, prompted |
+| `cleanup` | Review optional cleanup candidates and confirm each action | Yes, separately confirmed |
 
-```
-DISABLE_LATEX=1 ./setup.sh
-```
+Useful flags are `--profile NAME`, `--core-only`, `--skip-desktop`, `--dry-run`,
+and `--yes`. A dry run is equivalent to the read-only plan. `--yes` never
+bypasses destructive cleanup confirmations.
 
-If I just wanted to do some quick editing, maybe I only need my Vim files and 
-Homebrew set up. So I can run:
+## Profiles
 
-```
-ENABLE=1 ENABLE_HOMEBREW=1 ENABLE_VIM=1 ./setup.sh
-```
+| Profile | Intended machine | Included layers |
+| --- | --- | --- |
+| `personal-mac-laptop` | Personal Apple silicon Mac | Core, development, infrastructure, desktop, LaTeX, macOS preferences |
+| `work-mac-laptop` | Work Apple silicon Mac | Core, development, infrastructure, desktop, LaTeX, macOS preferences |
+| `work-mac-server` | UI-capable, often-headless Mac mini | Core, development, infrastructure, desktop, LaTeX, macOS preferences |
+| `work-linux-server` | Ubuntu 24.04+ server | Core, development, infrastructure |
+| `personal-linux-laptop` | x86-64 Ubuntu 24.04+ desktop | Core, development, infrastructure, desktop, LaTeX |
+| `minimal-remote` | Root-enabled Ubuntu host | Core only |
+| `minimal-remote-no-root` | Restricted Linux host | Verified user-local core subset |
 
-where `ENABLE=1` tells the script to only run components that are explicitly 
-enabled, and `ENABLE_VIM=1` enables the Vim component.
+Full UI profiles target the same workflows, but their application packages
+differ where an app is platform-specific. Web equivalents and manual omissions
+remain visible in the finish checklist.
+Ubuntu ARM64 remains supported by the server and remote profiles; its proprietary
+desktop app set is not represented as equivalent to x86-64.
 
-Alternatively, you can run the setup in interactive mode, where it will ask 
-you to confirm whether each component should run:
+## Important behavior
 
-```
-INTERACTIVE=1 ./setup.sh
-```
+- [chezmoi](https://www.chezmoi.io/) owns dotfiles and templates. Machine-local
+  names, emails, GPG fingerprints, SSH key paths, and proxy endpoints live only
+  in its local config.
+- Homebrew owns most cross-platform packages; Ubuntu `apt` owns prerequisites
+  and services. Normal `apply` passes Homebrew's no-upgrade mode.
+- [mise](https://mise.jdx.dev/) selects Python 3.13, current Node LTS, and current
+  Java LTS. Its checked-in lock records URLs and checksums for Apple silicon,
+  Linux x86-64, and Linux ARM64.
+- Rust uses rustup stable. Project files can override any language version.
+- Python projects stay clean. `ipy`/`pyscratch` opens a separate scientific
+  environment with Jupyter, NumPy, SciPy, pandas, Polars, Matplotlib, scikit-learn,
+  scikit-image, Pillow, Requests, and Beautiful Soup.
+- Git has no fallback identity. Repositories under `~/src/personal` use the
+  personal account; `~/src/work` and the locally named company folder use work;
+  `~/src/scratch` requires an explicit choice. The company folder name is kept
+  only in the local chezmoi config.
+- Standalone release archives are version-pinned and checksum-verified; signed
+  package managers and vendor repositories manage the rest.
+- Secrets, private keys, VPN settings, account sessions, and employer-specific
+  data are never committed.
 
-Repository Overview
---------------------
-
-Here's an overview of important files or directories:
-
-- [setup.sh](setup.sh): the main setup script
-
-- [resources](resources): directory containing any files that need to copied
-
-- [bash_scripts](bash_scripts): directory containing the defined behavior for 
-each of the components
-
-Components
-----------
-
-### Homebrew
-
-[Homebrew](https://brew.sh/) is my favorite package manager for Mac or Linux, 
-and is required to install many of the other components.
-
-### Vim
-
-[Vim](https://www.vim.org/) is my goto editor, and it will install the latest 
-version with `brew`. Additionally, it configures a 
-[.vimrc](resources/vim/.vimrc) file along with a colorscheme and other 
-vim settings files viewable in [](resources/vim/).
-
-### FZF
-
-[FZF](https://github.com/junegunn/fzf) is a fuzzy file searcher that 
-dramatically enhances your command line experience, and the Vim component 
-includes it as a plugin (separate from this component).
-
-### tree
-
-Just your standard `tree` command to recursively list directories.
-
-### Git
-
-I prefer having the latest version of [Git](https://git-scm.com/) installed 
-with `brew`.
-
-### nnn
-
-[nnn](https://github.com/jarun/nnn) is a very powerful terminal file manager 
-that helps you get around more efficiently.
-
-### LateX
-
-[LaTeX](https://www.latex-project.org/) is a typesetting system mostly used 
-for academic and scientific work. This component installs the
-[Tex Live](https://www.tug.org/texlive/) distribution on Linux and
-[MacTeX](https://www.tug.org/mactex/) on MacOS.
-
-### Python
-
-Installs the latest version of [Python](https://www.python.org/) with `brew`.
-Also installs [`pyenv`](https://github.com/pyenv/pyenv), which I use for 
-Python version management.
-
-### NodeJS
-
-Installs [NodeJS](https://nodejs.org/en/) and [Yarn](https://yarnpkg.com/) for 
-package management.
-
-### Java
-
-Installs [OpenJDK](https://openjdk.java.net/).
-
-### Rust
-
-Installs [rustup](https://rustup.rs/) with `brew`, and then installs 
-[Rust](https://www.rust-lang.org/) with `rustup`.
-
-### Boost
-
-The [Boost](https://www.boost.org/) C++ libraries are a great extension to the 
-STL.
-
-### Python Packages
-
-Installs various Python packages that I like to have installed globally on my 
-system, including:
-
-- `setuptools`
-- `twine`
-- `numpy`
-- `scikit-learn`
-- `matplotlib`
-- `pandas`
-- `jupyter`
-- `requests`
-- `pillow`
-- `beautifulsoup4`
+See [the component review](docs/components.md),
+[existing-machine guide](docs/existing-machines.md),
+[manual finish checklist](docs/manual-steps.md), and
+[maintenance notes](docs/maintenance.md).

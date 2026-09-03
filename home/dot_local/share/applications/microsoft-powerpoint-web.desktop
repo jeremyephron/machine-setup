@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Microsoft PowerPoint
+Exec=google-chrome --app=https://www.microsoft365.com/launch/powerpoint
+Icon=google-chrome
+Terminal=false
+Categories=Office;Presentation;

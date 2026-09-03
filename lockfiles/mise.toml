@@ -1,0 +1,22 @@
+# Union of all profile tools. This file exists only to refresh the shared,
+# cross-platform lockfile; chezmoi deploys the profile-specific config.
+[tools]
+python = "3.13"
+node = "lts"
+java = "lts"
+bat = "latest"
+direnv = "latest"
+fd = "latest"
+fzf = "latest"
+jq = "latest"
+neovim = "latest"
+ripgrep = "latest"
+shellcheck = "latest"
+shfmt = "latest"
+yq = "latest"
+"github:slackapi/slack-cli" = "latest"
+
+[settings]
+lockfile = true
+github.github_attestations = true
+github.slsa = true

@@ -1,0 +1,70 @@
+name: machine setup
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  static-and-templates:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+      - name: Install test dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y shellcheck shfmt
+          export SOURCE_DIR="$PWD"
+          . "$SOURCE_DIR/lib/common.sh"
+          . "$SOURCE_DIR/lib/versions.sh"
+          . "$SOURCE_DIR/lib/portable.sh"
+          MACHINE_SETUP_DRY_RUN=0 install_portable_chezmoi
+          MACHINE_SETUP_DRY_RUN=0 install_portable_mise
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+      - name: Test profiles, scripts, and rendered homes
+        run: ./tests/run.sh
+
+  bootstrap-core:
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-15
+            profile: personal-mac-laptop
+          - os: ubuntu-24.04
+            profile: work-linux-server
+          - os: ubuntu-24.04-arm
+            profile: minimal-remote-no-root
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+      - name: Apply core profile on a fresh runner
+        run: ./setup.sh apply --profile "${{ matrix.profile }}" --core-only --skip-desktop --ci
+      - name: Check convergence
+        run: |
+          ./setup.sh apply --profile "${{ matrix.profile }}" --core-only --skip-desktop --ci
+          ./setup.sh doctor --profile "${{ matrix.profile }}" --core-only --skip-desktop --ci
+
+  bootstrap-full-cli:
+    if: github.event_name == 'workflow_dispatch'
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-15
+            profile: personal-mac-laptop
+          - os: ubuntu-24.04
+            profile: work-linux-server
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+      - name: Apply full non-GUI profile
+        run: ./setup.sh apply --profile "${{ matrix.profile }}" --skip-desktop --ci
+      - name: Check full non-GUI profile
+        run: ./setup.sh doctor --profile "${{ matrix.profile }}" --skip-desktop --ci

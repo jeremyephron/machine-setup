@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=WhatsApp
+Exec=google-chrome --app=https://web.whatsapp.com/
+Icon=google-chrome
+Terminal=false
+Categories=Network;Chat;

@@ -1,0 +1,19 @@
+[project]
+name = "machine-setup-python-scratch"
+version = "0.1.0"
+requires-python = ">=3.13,<3.14"
+dependencies = [
+  "beautifulsoup4>=4.13,<5",
+  "ipykernel>=6.29,<7",
+  "ipython>=9,<10",
+  "jupyterlab>=4.4,<5",
+  "matplotlib>=3.10,<4",
+  "numpy>=2.2,<3",
+  "pandas>=2.2,<3",
+  "pillow>=11,<12",
+  "polars>=1.30,<2",
+  "requests>=2.32,<3",
+  "scikit-image>=0.25,<1",
+  "scikit-learn>=1.6,<2",
+  "scipy>=1.15,<2",
+]

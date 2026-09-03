@@ -1,0 +1,11 @@
+{{- if eq .chezmoi.os "darwin" }}
+command = /opt/homebrew/bin/bash --login
+macos-option-as-alt = true
+{{- else }}
+command = /bin/bash --login
+{{- end }}
+shell-integration = bash
+shell-integration-features = cursor,sudo,title
+window-inherit-working-directory = true
+copy-on-select = clipboard
+confirm-close-surface = false

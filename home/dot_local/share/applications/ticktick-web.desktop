@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=TickTick
+Exec=google-chrome --app=https://ticktick.com/webapp/
+Icon=google-chrome
+Terminal=false
+Categories=Office;

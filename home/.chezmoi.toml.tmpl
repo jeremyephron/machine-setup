@@ -1,0 +1,67 @@
+{{- $ci := eq (env "MACHINE_SETUP_CI") "1" -}}
+{{- $profile := env "MACHINE_SETUP_PROFILE" -}}
+{{- if eq $profile "" -}}
+{{-   $profile = promptStringOnce . "profile" "Machine profile" -}}
+{{- end -}}
+{{- $personalName := env "MACHINE_SETUP_PERSONAL_NAME" -}}
+{{- $personalEmail := env "MACHINE_SETUP_PERSONAL_EMAIL" -}}
+{{- $workName := env "MACHINE_SETUP_WORK_NAME" -}}
+{{- $workEmail := env "MACHINE_SETUP_WORK_EMAIL" -}}
+{{- $personalSshKey := env "MACHINE_SETUP_PERSONAL_SSH_KEY" -}}
+{{- $workSshKey := env "MACHINE_SETUP_WORK_SSH_KEY" -}}
+{{- $companyFolder := env "MACHINE_SETUP_COMPANY_FOLDER" -}}
+{{- $personalGpg := "" -}}
+{{- $workGpg := "" -}}
+{{- $socksTarget := "" -}}
+{{- if eq $personalSshKey "" -}}
+{{-   $personalSshKey = "~/.ssh/id_ed25519_personal_gh" -}}
+{{- end -}}
+{{- if eq $workSshKey "" -}}
+{{-   $workSshKey = "~/.ssh/id_ed25519" -}}
+{{- end -}}
+{{- if eq $companyFolder "" -}}
+{{-   $companyFolder = "company" -}}
+{{- end -}}
+{{- if not $ci -}}
+{{-   if eq $personalName "" -}}
+{{-     $personalName = promptStringOnce . "personalName" "Personal Git name" -}}
+{{-   end -}}
+{{-   if eq $personalEmail "" -}}
+{{-     $personalEmail = promptStringOnce . "personalEmail" "Personal Git email" -}}
+{{-   end -}}
+{{-   if eq $workName "" -}}
+{{-     $workName = promptStringOnce . "workName" "Work Git name" -}}
+{{-   end -}}
+{{-   if eq $workEmail "" -}}
+{{-     $workEmail = promptStringOnce . "workEmail" "Work Git email" -}}
+{{-   end -}}
+{{-   $personalSshKey = promptStringOnce . "personalSshKey" "Personal SSH private key path" $personalSshKey -}}
+{{-   $workSshKey = promptStringOnce . "workSshKey" "Work SSH private key path" $workSshKey -}}
+{{-   $companyFolder = promptStringOnce . "companyFolder" "Primary company folder name under ~/src" $companyFolder -}}
+{{-   $personalGpg = promptStringOnce . "personalGpg" "Personal GPG signing key fingerprint (blank until restored)" -}}
+{{-   $workGpg = promptStringOnce . "workGpg" "Work GPG signing key fingerprint (blank until restored)" -}}
+{{-   $socksTarget = promptStringOnce . "socksTarget" "Optional SSH host for the SOCKS proxy (blank disables it)" -}}
+{{- end -}}
+{{- if not (regexMatch "^[A-Za-z0-9][A-Za-z0-9._-]*$" $companyFolder) -}}
+{{-   fail "companyFolder must be one folder name containing only letters, numbers, dots, underscores, or hyphens" -}}
+{{- end -}}
+
+[data.machineSetup]
+profile = {{ $profile | quote }}
+companyFolder = {{ $companyFolder | quote }}
+
+[data.identity.personal]
+name = {{ $personalName | quote }}
+email = {{ $personalEmail | quote }}
+sshKey = {{ $personalSshKey | quote }}
+gpgKey = {{ $personalGpg | quote }}
+
+[data.identity.work]
+name = {{ $workName | quote }}
+email = {{ $workEmail | quote }}
+sshKey = {{ $workSshKey | quote }}
+gpgKey = {{ $workGpg | quote }}
+
+[data.socksProxy]
+target = {{ $socksTarget | quote }}
+port = 8080

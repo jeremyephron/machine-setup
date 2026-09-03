@@ -1,0 +1,22 @@
+Include ~/.ssh/config.local
+
+Host *
+    ServerAliveInterval 60
+    ServerAliveCountMax 3
+    HashKnownHosts yes
+    IdentitiesOnly yes
+{{- if eq .chezmoi.os "darwin" }}
+    IgnoreUnknown UseKeychain
+    UseKeychain yes
+    AddKeysToAgent yes
+{{- end }}
+
+Host github-personal
+    HostName github.com
+    User git
+    IdentityFile {{ dig "identity" "personal" "sshKey" "" . | default "~/.ssh/id_ed25519_personal_gh" }}
+
+Host github-work
+    HostName github.com
+    User git
+    IdentityFile {{ dig "identity" "work" "sshKey" "" . | default "~/.ssh/id_ed25519" }}

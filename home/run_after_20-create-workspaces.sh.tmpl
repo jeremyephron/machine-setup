@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+set -eu
+
+{{- $companyFolder := dig "machineSetup" "companyFolder" "company" . -}}
+{{- if not (regexMatch "^[A-Za-z0-9][A-Za-z0-9._-]*$" $companyFolder) -}}
+{{-   fail "machineSetup.companyFolder must be one folder name containing only letters, numbers, dots, underscores, or hyphens" -}}
+{{- end }}
+company_folder={{ $companyFolder | quote }}
+
+mkdir -p \
+  "$HOME/src/personal" \
+  "$HOME/src/work" \
+  "$HOME/src/$company_folder" \
+  "$HOME/src/scratch" \
+  "$HOME/.local/bin" \
+  "$HOME/.local/state/machine-setup"

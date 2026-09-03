@@ -1,0 +1,11 @@
+bash-completion
+build-essential
+ca-certificates
+curl
+file
+git
+gnupg
+procps
+software-properties-common
+unzip
+xz-utils

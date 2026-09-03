@@ -1,0 +1,4 @@
+return {
+  name = {{ .machineSetup.profile | quote }},
+  minimal = {{ or (eq .machineSetup.profile "minimal-remote") (eq .machineSetup.profile "minimal-remote-no-root") }},
+}
