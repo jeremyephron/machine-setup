@@ -87,4 +87,34 @@ install_brewfile() {
 install_profile_packages </dev/null
 [ "$processed_brewfiles" = ' Brewfile.core Brewfile.dev Brewfile.infra Brewfile.desktop Brewfile.latex' ] || die 'Not every selected Brewfile was processed.'
 
+# A new BasicTeX installation may need a tlmgr self-update before CTAN accepts
+# a package installation.
+tex_packages_present=0
+texlive_calls=''
+texlive_self_updated=0
+# shellcheck disable=SC2329
+tlmgr() {
+  if [ "$1" = 'info' ] && [ "$2" = '--only-installed' ] && [ "$tex_packages_present" = '1' ]; then
+    printf 'package: %s\ninstalled:   Yes\n' "$3"
+    return 0
+  fi
+  [ "$1" != 'info' ] || printf 'package: %s\ninstalled:   No\n' "$3"
+  return 1
+}
+# shellcheck disable=SC2329
+sudo_run() {
+  texlive_calls="${texlive_calls}|$*"
+  case "$*" in
+    'tlmgr update --self') texlive_self_updated=1 ;;
+    'tlmgr install '*) [ "$texlive_self_updated" = '1' ] || die 'TeX packages were installed before tlmgr updated itself.' ;;
+  esac
+}
+ensure_texlive_recommended_packages >/dev/null
+[ "$texlive_calls" = '|tlmgr update --self|tlmgr install latexmk collection-latexrecommended collection-fontsrecommended' ] || die 'The TeX Live repair sequence is incomplete.'
+
+tex_packages_present=1
+texlive_calls=''
+ensure_texlive_recommended_packages >/dev/null
+[ -z "$texlive_calls" ] || die 'Satisfied TeX packages caused an unnecessary privileged update.'
+
 printf 'package tests passed\n'

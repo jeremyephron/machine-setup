@@ -25,6 +25,30 @@ sudo_run() {
   fi
 }
 
+ensure_texlive_recommended_packages() {
+  local tlmgr_bin
+  local tex_package
+  local missing_tex=()
+
+  tlmgr_bin="$(command -v tlmgr 2>/dev/null || true)"
+  [ -n "$tlmgr_bin" ] || die 'TeX Live is installed, but tlmgr is not on PATH. Start a new shell and retry.'
+
+  for tex_package in latexmk collection-latexrecommended collection-fontsrecommended; do
+    if ! "$tlmgr_bin" info --only-installed "$tex_package" 2>/dev/null | grep -Eq '^installed:[[:space:]]+Yes$'; then
+      missing_tex+=("$tex_package")
+    fi
+  done
+  if [ "${#missing_tex[@]}" -eq 0 ]; then
+    success 'Recommended TeX packages are installed'
+    return 0
+  fi
+
+  # TeX Live requires its package manager to be current before it will install
+  # packages from a newer CTAN repository snapshot.
+  sudo_run "$tlmgr_bin" update --self
+  sudo_run "$tlmgr_bin" install "${missing_tex[@]}"
+}
+
 ensure_xcode_tools() {
   xcode-select -p >/dev/null 2>&1 && return 0
   if [ "$MACHINE_SETUP_DRY_RUN" = '1' ]; then

@@ -34,15 +34,12 @@ fi
 
 "${SOURCE_DIR}/scripts/install-editor.sh" --development
 
-if [ "$(uname -s)" = 'Darwin' ] && have tlmgr; then
-  heading 'LaTeX tools'
-  missing_tex=''
-  for tex_package in latexmk collection-latexrecommended collection-fontsrecommended; do
-    tlmgr info --only-installed "$tex_package" 2>/dev/null | grep -q '^package:' || missing_tex="${missing_tex} ${tex_package}"
-  done
-  if [ -n "$missing_tex" ]; then
-    # TeX Live is a system tree when installed by BasicTeX/MacTeX.
-    # shellcheck disable=SC2086
-    sudo tlmgr install $missing_tex
+if [ "$(uname -s)" = 'Darwin' ]; then
+  # BasicTeX updates /etc/paths.d, which does not affect this already-running
+  # setup process until path_helper is evaluated again.
+  eval "$(/usr/libexec/path_helper)"
+  if have tlmgr; then
+    heading 'LaTeX tools'
+    ensure_texlive_recommended_packages
   fi
 fi

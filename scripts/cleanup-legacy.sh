@@ -52,9 +52,14 @@ if activate_homebrew; then
     if confirm 'Replace full MacTeX with BasicTeX now?'; then
       brew uninstall --cask mactex
       brew install --cask basictex
-      eval "$(/usr/libexec/path_helper)"
-      sudo tlmgr install latexmk collection-latexrecommended collection-fontsrecommended
     fi
+  fi
+
+  # This also resumes a migration if BasicTeX was installed successfully but a
+  # subsequent tlmgr operation failed.
+  if brew list --cask basictex >/dev/null 2>&1; then
+    eval "$(/usr/libexec/path_helper)"
+    ensure_texlive_recommended_packages
   fi
 
   heading 'Unselected Homebrew inventory'

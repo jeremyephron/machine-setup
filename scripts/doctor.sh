@@ -11,6 +11,9 @@ SOURCE_DIR="$(CDPATH='' cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 
 load_profile "$1"
 activate_homebrew || true
+if is_macos; then
+  eval "$(/usr/libexec/path_helper)"
+fi
 path_prepend "${HOME}/.local/bin"
 if have mise; then
   eval "$(mise activate bash)"
@@ -192,6 +195,24 @@ if [ "$PROFILE_INFRA" = '1' ] && [ "${MACHINE_SETUP_CORE_ONLY:-0}" = '0' ]; then
       warn_check 'Tailscale app is installed; verify its connection in the menu bar'
     else
       warn_check 'Tailscale still needs sign-in'
+    fi
+  fi
+fi
+
+if [ "$PROFILE_LATEX" = '1' ] && [ "${MACHINE_SETUP_CORE_ONLY:-0}" = '0' ]; then
+  heading 'LaTeX'
+  check_command latexmk
+  check_command pdflatex
+  if [ "$PROFILE_PLATFORM" = 'darwin' ]; then
+    check_command tlmgr
+    if have tlmgr; then
+      for tex_package in latexmk collection-latexrecommended collection-fontsrecommended; do
+        if tlmgr info --only-installed "$tex_package" 2>/dev/null | grep -Eq '^installed:[[:space:]]+Yes$'; then
+          pass_check "TeX package ${tex_package}"
+        else
+          fail_check "TeX package ${tex_package} is missing"
+        fi
+      done
     fi
   fi
 fi
