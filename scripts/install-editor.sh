@@ -26,7 +26,7 @@ if ! version_at_least "$nvim_version" '0.11.3'; then
 fi
 
 heading 'Neovim plugins'
-nvim --headless '+Lazy! sync' \
+nvim --headless '+Lazy! restore' \
   '+lua local missing = {}; for name, plugin in pairs(require("lazy.core.config").plugins) do if plugin._.installed ~= true then table.insert(missing, name) end end; assert(#missing == 0, "missing plugins: " .. table.concat(missing, ", "))' \
   "$nvim_error_guard" \
   +qa

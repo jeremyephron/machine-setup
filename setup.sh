@@ -188,8 +188,30 @@ show_dotfile_plan() {
   chezmoi --source "$SOURCE_DIR" diff --no-pager || true
 }
 
+retire_legacy_nvim_init() {
+  local legacy_init="${XDG_CONFIG_HOME:-${HOME}/.config}/nvim/init.vim"
+  local backup_dir
+  local backup_path
+
+  if [ ! -e "$legacy_init" ] && [ ! -L "$legacy_init" ]; then
+    return 0
+  fi
+  backup_dir="$(machine_setup_state_dir)/backups/$(date +%Y%m%d-%H%M%S)"
+  backup_path="${backup_dir}/nvim-init.vim"
+  heading 'Legacy Neovim configuration'
+  warn "Neovim cannot use both ${legacy_init} and the managed init.lua."
+  if ! confirm "Move ${legacy_init} to the recoverable backup ${backup_path}?"; then
+    die 'The legacy init.vim must be moved before the managed Neovim configuration can be applied.'
+  fi
+  ensure_dir "$backup_dir"
+  [ ! -e "$backup_path" ] || die "Backup target already exists: ${backup_path}"
+  run mv "$legacy_init" "$backup_path"
+  success "Moved the legacy init.vim to ${backup_path}."
+}
+
 apply_dotfiles() {
   ensure_chezmoi_initialized
+  retire_legacy_nvim_init
   heading 'Managed configuration'
   if [ "$MACHINE_SETUP_CI" = '1' ]; then
     # Hosted runner images are disposable but can contain pre-existing dotfiles.
@@ -217,7 +239,7 @@ run_post_apply() {
     heading 'No-root user-local tools'
     mise install --locked --yes
     mise reshim
-    mise exec -- nvim --headless '+Lazy! sync' "$nvim_error_guard" +qa
+    mise exec -- nvim --headless '+Lazy! restore' "$nvim_error_guard" +qa
     mise exec -- nvim --headless \
       '+lua local missing = {}; for name, plugin in pairs(require("lazy.core.config").plugins) do if plugin._.installed ~= true then table.insert(missing, name) end end; assert(#missing == 0, "missing plugins: " .. table.concat(missing, ", "))' \
       "$nvim_error_guard" \

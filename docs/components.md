@@ -67,7 +67,7 @@ Package manifests are grouped by role:
 
 - Core: Bash, Neovim, tmux, Git, Git LFS, delta, GitHub CLI, GPG, fzf,
   ripgrep, fd, bat, jq/yq, nnn, btop, tree, watch, direnv, shellcheck/shfmt,
-  chezmoi, mise, and uv.
+  Tree-sitter CLI, chezmoi, mise, and uv.
 - Development: Bazelisk, CMake, Ninja, GCC, GDB where supported, FFmpeg,
   ImageMagick, pkg-config, pre-commit, and rustup.
 - Infrastructure: AWS CLI, kubectl, Terraform, Docker, Tailscale, and OpenVPN.

@@ -24,5 +24,6 @@ require("lazy").setup("machine_setup.plugins", {
   checker = { enabled = false },
   install = { colorscheme = { "monokai", "habamax" } },
   lockfile = vim.fn.stdpath("config") .. "/lazy-lock.json",
+  rocks = { enabled = false },
   ui = { border = "rounded" },
 })

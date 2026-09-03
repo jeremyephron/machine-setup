@@ -113,7 +113,7 @@ cask_artifact_exists() {
 install_desktop_casks() {
   local brewfile="$1"
   local cask
-  while IFS= read -r cask; do
+  while IFS= read -r cask <&3; do
     [ -n "$cask" ] || continue
     if brew list --cask "$cask" >/dev/null 2>&1; then
       success "${cask} is already Homebrew-managed"
@@ -122,7 +122,7 @@ install_desktop_casks() {
     else
       run brew install --cask "$cask"
     fi
-  done <<EOF
+  done 3<<EOF
 $(awk -F'"' '/^cask / { print $2 }' "$brewfile")
 EOF
 }
@@ -130,7 +130,7 @@ EOF
 update_desktop_casks() {
   local brewfile="$1"
   local cask
-  while IFS= read -r cask; do
+  while IFS= read -r cask <&3; do
     [ -n "$cask" ] || continue
     if brew list --cask "$cask" >/dev/null 2>&1; then
       run brew upgrade --cask "$cask"
@@ -139,7 +139,7 @@ update_desktop_casks() {
     else
       run brew install --cask "$cask"
     fi
-  done <<EOF
+  done 3<<EOF
 $(awk -F'"' '/^cask / { print $2 }' "$brewfile")
 EOF
 }
@@ -150,7 +150,7 @@ brewfile_check() {
   local item
   local missing=''
   [ -f "$brewfile" ] || return 0
-  while IFS=' ' read -r kind item; do
+  while IFS=' ' read -r kind item <&3; do
     [ -n "$item" ] || continue
     if brew list "--${kind}" "$item" >/dev/null 2>&1; then
       continue
@@ -160,7 +160,7 @@ brewfile_check() {
     else
       missing="${missing}\n    ${item}"
     fi
-  done <<EOF
+  done 3<<EOF
 $(awk -F'"' '/^brew / { print "formula " $2 } /^cask / { print "cask " $2 }' "$brewfile")
 EOF
   if [ -z "$missing" ]; then
@@ -171,14 +171,53 @@ EOF
   fi
 }
 
+brew_bundle_install() {
+  local brewfile="$1"
+  local attempts=1
+  local attempt=1
+  shift
+
+  if [ "$(basename "$brewfile")" = 'Brewfile.infra' ] && brew help trust >/dev/null 2>&1; then
+    # Homebrew 6 requires explicit trust for formulae from third-party taps.
+    # Trust only Terraform rather than every formula in HashiCorp's tap.
+    run brew trust --formula hashicorp/tap/terraform
+  fi
+  if [ "${MACHINE_SETUP_CI:-0}" = '1' ]; then
+    attempts=2
+  fi
+  while [ "$attempt" -le "$attempts" ]; do
+    # Bundle already leaves successful installs in place, so a CI retry is both
+    # cheap and useful for transient Homebrew download-cache races. Automatic
+    # cleanup is unnecessary during an install and can race parallel downloads.
+    if run env HOMEBREW_NO_INSTALL_CLEANUP=1 brew bundle install "$@" --file "$brewfile"; then
+      return 0
+    fi
+    if [ "$attempt" -lt "$attempts" ]; then
+      warn "Homebrew bundle failed; retrying $(basename "$brewfile") once."
+    fi
+    attempt=$((attempt + 1))
+  done
+  return 1
+}
+
 install_brewfile() {
   local brewfile="$1"
   [ -f "$brewfile" ] || return 0
   heading "Packages: $(basename "$brewfile")"
+  if [ "$(basename "$brewfile")" = 'Brewfile.dev' ] &&
+    brew list --formula bazel >/dev/null 2>&1 &&
+    ! brew list --formula bazelisk >/dev/null 2>&1; then
+    warn 'Homebrew Bazel is installed, but Bazelisk is the managed Bazel version selector.'
+    if confirm 'Temporarily unlink Bazel so Bazelisk can provide the bazel command? (brew link bazel reverses this)'; then
+      run brew unlink bazel
+    else
+      die 'Bazelisk cannot be installed while Homebrew Bazel is linked.'
+    fi
+  fi
   if [ "$(basename "$brewfile")" = 'Brewfile.desktop' ]; then
     install_desktop_casks "$brewfile"
   else
-    run brew bundle install --no-upgrade --file "$brewfile"
+    brew_bundle_install "$brewfile" --no-upgrade
   fi
 }
 
@@ -188,7 +227,7 @@ update_brewfile() {
   if [ "$(basename "$brewfile")" = 'Brewfile.desktop' ]; then
     update_desktop_casks "$brewfile"
   else
-    run brew bundle install --file "$brewfile"
+    brew_bundle_install "$brewfile"
   fi
 }
 
@@ -205,7 +244,7 @@ for_profile_brewfiles() {
   fi
   if [ "$PROFILE_LATEX" = '1' ] && [ "$MACHINE_SETUP_CORE_ONLY" = '0' ] && [ "$PROFILE_PLATFORM" = 'darwin' ]; then
     if activate_homebrew && brew list --cask mactex >/dev/null 2>&1; then
-      warn 'MacTeX is installed; BasicTeX is held back until cleanup verifies the migration.'
+      warn 'MacTeX is installed and already satisfies the LaTeX requirement; preserving it instead of installing BasicTeX.'
     else
       printf '%s\n' "${SOURCE_DIR}/packages/Brewfile.latex"
     fi
@@ -221,17 +260,17 @@ package_plan() {
   fi
   if ! activate_homebrew; then
     warn 'Homebrew is missing; apply will install it from a pinned, verified revision.'
-    while IFS= read -r brewfile; do
+    while IFS= read -r brewfile <&3; do
       [ -n "$brewfile" ] || continue
       printf '  %s\n' "$(basename "$brewfile")"
-    done <<EOF
+    done 3<<EOF
 $(for_profile_brewfiles)
 EOF
     return 0
   fi
-  while IFS= read -r brewfile; do
+  while IFS= read -r brewfile <&3; do
     brewfile_check "$brewfile"
-  done <<EOF
+  done 3<<EOF
 $(for_profile_brewfiles)
 EOF
 }
@@ -247,9 +286,9 @@ install_profile_packages() {
     ensure_ubuntu_prerequisites
   fi
   install_homebrew
-  while IFS= read -r brewfile; do
+  while IFS= read -r brewfile <&3; do
     [ -n "$brewfile" ] && install_brewfile "$brewfile"
-  done <<EOF
+  done 3<<EOF
 $(for_profile_brewfiles)
 EOF
 }
@@ -259,9 +298,9 @@ update_profile_packages() {
   [ "$PROFILE_NEEDS_ROOT" = '1' ] || die 'No-root profiles do not perform blanket upgrades. Re-run bootstrap after reviewing pinned versions.'
   activate_homebrew || die 'Homebrew is not installed. Run apply first.'
   run brew update
-  while IFS= read -r brewfile; do
+  while IFS= read -r brewfile <&3; do
     [ -n "$brewfile" ] && update_brewfile "$brewfile"
-  done <<EOF
+  done 3<<EOF
 $(for_profile_brewfiles)
 EOF
 }

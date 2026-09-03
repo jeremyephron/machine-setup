@@ -18,6 +18,12 @@ fi
 if have brew && rustup_prefix="$(brew --prefix rustup 2>/dev/null)" && [ -d "$rustup_prefix/bin" ]; then
   path_prepend "$rustup_prefix/bin"
 fi
+mason_bin="${XDG_DATA_HOME:-${HOME}/.local/share}/nvim/mason/bin"
+if [ -d "$mason_bin" ]; then
+  # Mason prepends this directory inside Neovim; mirror that environment when
+  # checking editor-only tools without exposing them globally in the shell.
+  path_prepend "$mason_bin"
+fi
 
 DOCTOR_FAILURES=0
 DOCTOR_WARNINGS=0
@@ -64,6 +70,22 @@ for command in bat btop direnv fd gh git-lfs gpg jq nnn shellcheck shfmt tmux tr
     check_command "$command"
   fi
 done
+
+case "$PROFILE_NAME" in
+  minimal-remote | minimal-remote-no-root) ;;
+  *)
+    if have tree-sitter; then
+      tree_sitter_version="$(tree-sitter --version | awk '{ print $2 }')"
+      if version_at_least "$tree_sitter_version" '0.26.1'; then
+        pass_check "tree-sitter CLI ${tree_sitter_version}"
+      else
+        fail_check "tree-sitter CLI ${tree_sitter_version} is older than 0.26.1"
+      fi
+    else
+      fail_check 'tree-sitter CLI is missing'
+    fi
+    ;;
+esac
 
 heading 'Managed state'
 for target in \
@@ -142,6 +164,11 @@ if [ "$PROFILE_DEV" = '1' ] && [ "${MACHINE_SETUP_CORE_ONLY:-0}" = '0' ]; then
   else
     fail_check 'Python scientific scratch environment is missing'
   fi
+
+  heading 'Editor development tools'
+  for command in bash-language-server basedpyright-langserver clangd debugpy-adapter docker-langserver jdtls prettier ruff rust-analyzer stylua terraform-ls typescript-language-server yaml-language-server; do
+    check_command "$command"
+  done
 fi
 
 if [ "$PROFILE_INFRA" = '1' ] && [ "${MACHINE_SETUP_CORE_ONLY:-0}" = '0' ]; then
@@ -197,7 +224,9 @@ if [ "$PROFILE_PLATFORM" = 'darwin' ]; then
   fi
   if [ "$PROFILE_DESKTOP" = '1' ] && [ "${MACHINE_SETUP_CORE_ONLY:-0}" = '0' ] && [ "${MACHINE_SETUP_SKIP_DESKTOP:-0}" = '0' ]; then
     for app in 'Docker' 'Ghostty' 'Google Chrome' 'Microsoft Excel' 'Microsoft PowerPoint' 'Microsoft Word' 'Obsidian' 'OpenSuperWhisper' 'OpenVPN Connect' 'Rectangle' 'Signal' 'Skim' 'Slack' 'Spotify' 'Tailscale' 'TickTick' 'WhatsApp' 'XQuartz' 'Zotero'; do
-      if [ -d "/Applications/${app}.app" ] || [ -d "$HOME/Applications/${app}.app" ]; then
+      if [ -d "/Applications/${app}.app" ] ||
+        [ -d "$HOME/Applications/${app}.app" ] ||
+        { [ "$app" = 'XQuartz' ] && [ -d /Applications/Utilities/XQuartz.app ]; }; then
         pass_check "$app"
       else
         fail_check "$app is missing"

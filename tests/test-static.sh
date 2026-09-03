@@ -12,6 +12,21 @@ bash -n "$SOURCE_DIR/home/dot_bash_profile" "$SOURCE_DIR/home/dot_bashrc"
 grep -Fq 'BASH_SILENCE_DEPRECATION_WARNING=1' "$SOURCE_DIR/home/dot_bash_profile"
 grep -Fq "chezmoi --source \"\$SOURCE_DIR\" apply --force --no-tty" "$SOURCE_DIR/setup.sh"
 grep -Fq '{ "folke/lazy.nvim", branch = "main" }' "$SOURCE_DIR/home/dot_config/nvim/lua/machine_setup/plugins.lua"
+grep -Fq 'rocks = { enabled = false }' "$SOURCE_DIR/home/dot_config/nvim/lua/machine_setup/lazy.lua"
+grep -Fq 'vim.g.loaded_python3_provider = 0' "$SOURCE_DIR/home/dot_config/nvim/init.lua"
+grep -Fq 'brew "tree-sitter-cli"' "$SOURCE_DIR/packages/Brewfile.core"
+grep -Fq 'HOMEBREW_NO_INSTALL_CLEANUP=1 brew bundle install' "$SOURCE_DIR/lib/packages.sh"
+grep -Fq 'brew trust --formula hashicorp/tap/terraform' "$SOURCE_DIR/lib/packages.sh"
+grep -Fq 'retire_legacy_nvim_init' "$SOURCE_DIR/setup.sh"
+grep -Fq 'nvim-init.vim' "$SOURCE_DIR/setup.sh"
+grep -Fq 'nvim/mason/bin' "$SOURCE_DIR/scripts/doctor.sh"
+grep -Fq '/Applications/Utilities/XQuartz.app' "$SOURCE_DIR/scripts/doctor.sh"
+grep -Fq "nvim --headless '+Lazy! restore'" "$SOURCE_DIR/scripts/install-editor.sh"
+grep -Fq "mise exec -- nvim --headless '+Lazy! restore'" "$SOURCE_DIR/setup.sh"
+if rg -n "Lazy! sync" "$SOURCE_DIR/setup.sh" "$SOURCE_DIR/scripts"; then
+  printf 'Normal apply must not upgrade Neovim plugins.\n' >&2
+  exit 1
+fi
 grep -Fq 'cquit 1' "$SOURCE_DIR/setup.sh"
 grep -Fq 'cquit 1' "$SOURCE_DIR/scripts/install-editor.sh"
 
