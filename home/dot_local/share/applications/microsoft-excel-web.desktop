@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Microsoft Excel
+Exec=google-chrome --app=https://www.microsoft365.com/launch/excel
+Icon=google-chrome
+Terminal=false
+Categories=Office;Spreadsheet;

@@ -1,0 +1,25 @@
+[tools]
+python = "3.13"
+{{- if eq .machineSetup.profile "minimal-remote-no-root" }}
+bat = "latest"
+direnv = "latest"
+fd = "latest"
+fzf = "latest"
+jq = "latest"
+neovim = "latest"
+ripgrep = "latest"
+shellcheck = "latest"
+shfmt = "latest"
+yq = "latest"
+{{- else if ne .machineSetup.profile "minimal-remote" }}
+node = "lts"
+java = "lts"
+"github:slackapi/slack-cli" = "latest"
+{{- end }}
+
+[settings]
+idiomatic_version_file_enable_tools = ["python", "node"]
+python.uv_venv_auto = true
+lockfile = true
+github.github_attestations = true
+github.slsa = true

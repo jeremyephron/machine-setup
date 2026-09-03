@@ -1,0 +1,10 @@
+# shellcheck shell=bash
+# Login and interactive shells share one configuration.
+case "${OSTYPE:-}" in
+  darwin*) export BASH_SILENCE_DEPRECATION_WARNING=1 ;;
+esac
+
+if [ -r "$HOME/.bashrc" ]; then
+  # shellcheck disable=SC1091
+  . "$HOME/.bashrc"
+fi

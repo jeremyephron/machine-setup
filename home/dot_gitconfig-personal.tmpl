@@ -1,0 +1,13 @@
+[user]
+	name = {{ .identity.personal.name | quote }}
+	email = {{ .identity.personal.email | quote }}
+{{- if ne .identity.personal.gpgKey "" }}
+	signingKey = {{ .identity.personal.gpgKey | quote }}
+[commit]
+	gpgSign = true
+[tag]
+	gpgSign = true
+{{- end }}
+{{- $sshKey := dig "identity" "personal" "sshKey" "" . | default "~/.ssh/id_ed25519_personal_gh" }}
+[core]
+	sshCommand = ssh -i {{ $sshKey }} -o IdentitiesOnly=yes

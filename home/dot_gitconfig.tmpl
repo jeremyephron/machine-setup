@@ -1,0 +1,50 @@
+{{- $companyFolder := dig "machineSetup" "companyFolder" "company" . -}}
+{{- if not (regexMatch "^[A-Za-z0-9][A-Za-z0-9._-]*$" $companyFolder) -}}
+{{-   fail "machineSetup.companyFolder must be one folder name containing only letters, numbers, dots, underscores, or hyphens" -}}
+{{- end -}}
+[user]
+	useConfigOnly = true
+[init]
+	defaultBranch = main
+[gpg]
+	program = gpg
+[fetch]
+	prune = true
+[pull]
+	rebase = true
+[push]
+	autoSetupRemote = true
+[rebase]
+	autoStash = true
+	updateRefs = true
+[rerere]
+	enabled = true
+	autoupdate = true
+[core]
+	pager = delta
+[interactive]
+	diffFilter = delta --color-only
+[delta]
+	navigate = true
+	line-numbers = true
+	side-by-side = true
+[merge]
+	conflictStyle = zdiff3
+[alias]
+	br = branch
+	ci = commit
+	co = checkout
+	st = status
+	graph = log --graph --decorate --oneline --all
+	root = rev-parse --show-toplevel
+[filter "lfs"]
+	smudge = git-lfs smudge -- %f
+	process = git-lfs filter-process
+	required = true
+	clean = git-lfs clean -- %f
+[includeIf "gitdir:~/src/personal/"]
+	path = ~/.gitconfig-personal
+[includeIf "gitdir:~/src/work/"]
+	path = ~/.gitconfig-work
+[includeIf "gitdir:~/src/{{ $companyFolder }}/"]
+	path = ~/.gitconfig-work

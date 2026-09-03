@@ -1,0 +1,10 @@
+{{- $desktop := or (or (eq .machineSetup.profile "personal-mac-laptop") (eq .machineSetup.profile "work-mac-laptop")) (or (eq .machineSetup.profile "work-mac-server") (eq .machineSetup.profile "personal-linux-laptop")) }}
+{{- if not $desktop }}
+.config/ghostty
+{{- end }}
+{{- if or (ne .machineSetup.profile "personal-linux-laptop") (ne .chezmoi.os "linux") }}
+.local/share/applications
+{{- end }}
+{{- if not (and (and (eq .machineSetup.profile "personal-linux-laptop") (eq .chezmoi.os "linux")) (eq .chezmoi.arch "arm64")) }}
+.local/share/applications/obsidian-appimage.desktop
+{{- end }}

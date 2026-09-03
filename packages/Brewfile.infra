@@ -1,0 +1,4 @@
+brew "awscli"
+brew "kubectl"
+tap "hashicorp/tap"
+brew "hashicorp/tap/terraform"

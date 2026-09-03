@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Microsoft Word
+Exec=google-chrome --app=https://www.microsoft365.com/launch/word
+Icon=google-chrome
+Terminal=false
+Categories=Office;WordProcessor;

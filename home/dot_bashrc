@@ -1,0 +1,189 @@
+# shellcheck shell=bash
+
+# Keep non-interactive shells fast and quiet.
+case $- in
+  *i*) ;;
+  *) return ;;
+esac
+
+# Ghostty injects this path. Loading it early enables working-directory and
+# command-status reporting without taking over the rest of the shell config.
+if [ -n "${GHOSTTY_RESOURCES_DIR:-}" ] && [ -r "${GHOSTTY_RESOURCES_DIR}/shell-integration/bash/ghostty.bash" ]; then
+  # shellcheck disable=SC1090,SC1091
+  . "${GHOSTTY_RESOURCES_DIR}/shell-integration/bash/ghostty.bash"
+fi
+
+case "$(uname -s)" in
+  Darwin)
+    if [ -x /opt/homebrew/bin/brew ]; then
+      eval "$(/opt/homebrew/bin/brew shellenv)"
+    fi
+    ;;
+  Linux)
+    if [ -x /home/linuxbrew/.linuxbrew/bin/brew ]; then
+      eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+    elif [ -x "$HOME/.linuxbrew/bin/brew" ]; then
+      eval "$("$HOME/.linuxbrew/bin/brew" shellenv)"
+    fi
+    ;;
+esac
+
+if command -v brew >/dev/null 2>&1; then
+  completion_file="$(brew --prefix)/etc/profile.d/bash_completion.sh"
+  if [ -r "$completion_file" ]; then
+    # shellcheck disable=SC1090
+    . "$completion_file"
+  fi
+fi
+
+case ":$PATH:" in
+  *":$HOME/.local/bin:"*) ;;
+  *) export PATH="$HOME/.local/bin:$PATH" ;;
+esac
+
+if command -v brew >/dev/null 2>&1 && rustup_prefix="$(brew --prefix rustup 2>/dev/null)" && [ -d "$rustup_prefix/bin" ]; then
+  case ":$PATH:" in
+    *":$rustup_prefix/bin:"*) ;;
+    *) export PATH="$rustup_prefix/bin:$PATH" ;;
+  esac
+fi
+
+export EDITOR='nvim'
+export VISUAL='nvim'
+GPG_TTY="$(tty 2>/dev/null || true)"
+export GPG_TTY
+
+if command -v mise >/dev/null 2>&1; then
+  eval "$(mise activate bash)"
+fi
+
+if command -v direnv >/dev/null 2>&1; then
+  eval "$(direnv hook bash)"
+fi
+
+if command -v fzf >/dev/null 2>&1; then
+  # fzf's maintained integration replaces the removed legacy installer.
+  eval "$(fzf --bash)"
+fi
+
+if [ -r "$HOME/.config/machine-setup/local.bash" ]; then
+  # Machine-local settings such as the SOCKS endpoint live outside Git.
+  # shellcheck disable=SC1090,SC1091
+  . "$HOME/.config/machine-setup/local.bash"
+fi
+
+socks-proxy() {
+  local action="${1:-status}"
+  local target="${MACHINE_SETUP_SOCKS_TARGET:-}"
+  local port="${MACHINE_SETUP_SOCKS_PORT:-8080}"
+  local control_dir="${XDG_RUNTIME_DIR:-$HOME/.local/state/machine-setup}"
+  local control_socket="${control_dir}/socks-proxy.sock"
+
+  if [ -z "$target" ]; then
+    printf 'No SOCKS target is configured. Edit ~/.config/machine-setup/local.bash.\n' >&2
+    return 1
+  fi
+  mkdir -p "$control_dir"
+  case "$action" in
+    on)
+      ssh -M -S "$control_socket" -fNT -D "127.0.0.1:${port}" "$target" || return
+      export ALL_PROXY="socks5h://127.0.0.1:${port}"
+      export all_proxy="$ALL_PROXY"
+      printf 'SOCKS proxy started on 127.0.0.1:%s.\n' "$port"
+      ;;
+    off)
+      ssh -S "$control_socket" -O exit "$target" >/dev/null 2>&1 || true
+      unset ALL_PROXY all_proxy
+      printf 'SOCKS proxy stopped.\n'
+      ;;
+    status)
+      if ssh -S "$control_socket" -O check "$target" >/dev/null 2>&1; then
+        printf 'SOCKS proxy is running on 127.0.0.1:%s.\n' "$port"
+      else
+        printf 'SOCKS proxy is stopped.\n'
+        return 1
+      fi
+      ;;
+    *)
+      printf 'Usage: socks-proxy {on|off|status}\n' >&2
+      return 2
+      ;;
+  esac
+}
+
+git-delete-merged() {
+  local default_ref default_branch current branches branch
+  git rev-parse --git-dir >/dev/null 2>&1 || { printf 'Not in a Git repository.\n' >&2; return 1; }
+  git fetch --prune || return
+  default_ref="$(git symbolic-ref --quiet refs/remotes/origin/HEAD 2>/dev/null || true)"
+  default_branch="${default_ref#refs/remotes/origin/}"
+  if [ -z "$default_ref" ]; then
+    for branch in main master; do
+      if git show-ref --verify --quiet "refs/remotes/origin/${branch}"; then
+        default_branch="$branch"
+        break
+      fi
+    done
+  fi
+  [ -n "$default_branch" ] || { printf 'Could not determine origin default branch.\n' >&2; return 1; }
+  current="$(git branch --show-current)"
+  branches="$(git for-each-ref --format='%(refname:short)' --merged "origin/${default_branch}" refs/heads/ | \
+    awk -v current="$current" -v default_branch="$default_branch" \
+      '$0 != current && $0 != default_branch && $0 != "main" && $0 != "master" && $0 != "develop"')"
+  if [ -z "$branches" ]; then
+    printf 'No merged local branches to delete.\n'
+    return 0
+  fi
+  printf 'Branches fully merged into origin/%s:\n%s\n' "$default_branch" "$branches"
+  printf 'Delete them with the safe -d check? [y/N] '
+  IFS= read -r answer
+  case "$answer" in
+    y|Y|yes|YES|Yes)
+      while IFS= read -r branch; do
+        [ -n "$branch" ] && git branch -d -- "$branch"
+      done <<EOF
+$branches
+EOF
+      ;;
+    *) printf 'Nothing deleted.\n' ;;
+  esac
+}
+
+n() {
+  if ! command -v nnn >/dev/null 2>&1; then
+    printf 'nnn is not installed.\n' >&2
+    return 127
+  fi
+  local directory_file
+  directory_file="${XDG_CONFIG_HOME:-$HOME/.config}/nnn/.lastd"
+  mkdir -p "$(dirname "$directory_file")"
+  NNN_TMPFILE="$directory_file" command nnn "$@"
+  if [ -s "$directory_file" ]; then
+    # nnn writes a quoted cd command to this file.
+    # shellcheck disable=SC1090
+    . "$directory_file"
+  fi
+}
+
+pyscratch() {
+  local environment="$HOME/.local/share/machine-setup/python-scratch"
+  if [ ! -x "$environment/bin/ipython" ]; then
+    printf 'The scratch environment is missing; run ./setup.sh apply for a full profile.\n' >&2
+    return 1
+  fi
+  "$environment/bin/ipython" "$@"
+}
+
+alias ipy='pyscratch'
+alias ll='ls -Alh'
+alias gs='git status --short --branch'
+
+# Keep the prompt static so Ghostty and direnv retain ownership of their
+# PROMPT_COMMAND hooks and can accurately observe the previous exit status.
+PS1='\[\033[0;32m\]λ\[\033[0m\] \W \\$ '
+
+# A private escape hatch for host- or employer-specific additions.
+if [ -r "$HOME/.bashrc.local" ]; then
+  # shellcheck disable=SC1090,SC1091
+  . "$HOME/.bashrc.local"
+fi
