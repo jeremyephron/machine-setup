@@ -39,6 +39,10 @@ for profile in $MACHINE_SETUP_PROFILES; do
     [ -d "$test_home/src/$workspace" ] || die "${profile} did not create src/${workspace}."
   done
   [ "$(git config --file "$test_home/.gitconfig" --get user.useConfigOnly)" = true ] || die 'Git identity guard is missing.'
+  [ "$(git config --file "$test_home/.gitconfig" --get filter.lfs.smudge)" = 'git-lfs smudge -- %f' ] || die 'Git LFS smudge filter is missing.'
+  [ "$(git config --file "$test_home/.gitconfig" --get filter.lfs.process)" = 'git-lfs filter-process' ] || die 'Git LFS process filter is missing.'
+  [ "$(git config --file "$test_home/.gitconfig" --get filter.lfs.required)" = true ] || die 'Git LFS required guard is missing.'
+  [ "$(git config --file "$test_home/.gitconfig" --get filter.lfs.clean)" = 'git-lfs clean -- %f' ] || die 'Git LFS clean filter is missing.'
   expected_work_config="$home_token/.gitconfig-work"
   [ "$(git config --file "$test_home/.gitconfig" --get "includeIf.gitdir:~/src/${company_folder}/.path")" = "$expected_work_config" ] || die 'The configured company folder must use the work Git identity.'
   [ -z "$(git config --file "$test_home/.gitconfig" --get commit.gpgSign 2>/dev/null || true)" ] || die 'Signing must not be enabled globally.'

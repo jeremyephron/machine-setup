@@ -23,7 +23,7 @@ grep -Fq 'nvim/mason/bin' "$SOURCE_DIR/scripts/doctor.sh"
 grep -Fq '/Applications/Utilities/XQuartz.app' "$SOURCE_DIR/scripts/doctor.sh"
 grep -Fq "nvim --headless '+Lazy! restore'" "$SOURCE_DIR/scripts/install-editor.sh"
 grep -Fq "mise exec -- nvim --headless '+Lazy! restore'" "$SOURCE_DIR/setup.sh"
-if rg -n "Lazy! sync" "$SOURCE_DIR/setup.sh" "$SOURCE_DIR/scripts"; then
+if grep -RFn 'Lazy! sync' "$SOURCE_DIR/setup.sh" "$SOURCE_DIR/scripts"; then
   printf 'Normal apply must not upgrade Neovim plugins.\n' >&2
   exit 1
 fi
@@ -55,7 +55,7 @@ fi
 
 git -C "$SOURCE_DIR" diff --check
 
-if rg -n --hidden --glob '!.git/**' --glob '!tests/**' \
+if grep -REn --exclude-dir=.git --exclude-dir=tests --binary-files=without-match \
   '(BEGIN (RSA|OPENSSH|EC|DSA) PRIVATE KEY|AKIA[0-9A-Z]{16}|ghp_[A-Za-z0-9]{30,})' "$SOURCE_DIR"; then
   printf 'Potential secret material found.\n' >&2
   exit 1

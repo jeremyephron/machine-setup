@@ -22,12 +22,15 @@ confirm() { return 0; }
 package_calls=''
 # shellcheck disable=SC2329
 run() { package_calls="${package_calls}|$*"; }
+# The real function is sourced above; ShellCheck only sees the test override below.
+# shellcheck disable=SC2218
 install_brewfile "${SOURCE_DIR}/packages/Brewfile.dev" >/dev/null 2>&1
 case "$package_calls" in
   *'|brew unlink bazel'*'|env HOMEBREW_NO_INSTALL_CLEANUP=1 brew bundle install --no-upgrade'*) ;;
   *) die 'Bazel was not unlinked before Brewfile installation continued.' ;;
 esac
 
+# shellcheck disable=SC2218
 install_brewfile "${SOURCE_DIR}/packages/Brewfile.infra" >/dev/null 2>&1
 case "$package_calls" in
   *'|brew trust --formula hashicorp/tap/terraform'*'|env HOMEBREW_NO_INSTALL_CLEANUP=1 brew bundle install --no-upgrade'*) ;;
@@ -46,6 +49,7 @@ run() {
     *) return 0 ;;
   esac
 }
+# shellcheck disable=SC2218
 MACHINE_SETUP_CI=1 install_brewfile "${SOURCE_DIR}/packages/Brewfile.core" >/dev/null 2>&1
 [ "$ci_bundle_attempts" -eq 2 ] || die 'CI did not retry a transient Homebrew bundle failure exactly once.'
 
