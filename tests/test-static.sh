@@ -24,8 +24,12 @@ grep -Fq 'retire_legacy_nvim_init' "$SOURCE_DIR/setup.sh"
 grep -Fq 'nvim-init.vim' "$SOURCE_DIR/setup.sh"
 grep -Fq 'nvim/mason/bin' "$SOURCE_DIR/scripts/doctor.sh"
 grep -Fq '/Applications/Utilities/XQuartz.app' "$SOURCE_DIR/scripts/doctor.sh"
-grep -Fq "nvim --headless '+Lazy! restore'" "$SOURCE_DIR/scripts/install-editor.sh"
-grep -Fq "mise exec -- nvim --headless '+Lazy! restore'" "$SOURCE_DIR/setup.sh"
+grep -Fq "'+Lazy! restore'" "$SOURCE_DIR/scripts/install-editor.sh"
+grep -Fq "'+Lazy! restore'" "$SOURCE_DIR/setup.sh"
+grep -Fq 'missing first-use Telescope mapping: ,ff' "$SOURCE_DIR/scripts/install-editor.sh"
+grep -Fq 'missing first-use Telescope mapping: ,ff' "$SOURCE_DIR/setup.sh"
+grep -Fq 'basedpyright lacks definition support' "$SOURCE_DIR/scripts/install-editor.sh"
+grep -Fq 'basedpyright lacks references support' "$SOURCE_DIR/scripts/install-editor.sh"
 if grep -RFn 'Lazy! sync' "$SOURCE_DIR/setup.sh" "$SOURCE_DIR/scripts"; then
   printf 'Normal apply must not upgrade Neovim plugins.\n' >&2
   exit 1

@@ -239,7 +239,9 @@ run_post_apply() {
     heading 'No-root user-local tools'
     mise install --locked --yes
     mise reshim
-    mise exec -- nvim --headless '+Lazy! restore' "$nvim_error_guard" +qa
+    mise exec -- nvim --headless \
+      '+lua assert(vim.fn.maparg(",ff", "n") ~= "", "missing first-use Telescope mapping: ,ff")' \
+      '+Lazy! restore' "$nvim_error_guard" +qa
     mise exec -- nvim --headless \
       '+lua local missing = {}; for name, plugin in pairs(require("lazy.core.config").plugins) do if plugin._.installed ~= true then table.insert(missing, name) end end; assert(#missing == 0, "missing plugins: " .. table.concat(missing, ", "))' \
       "$nvim_error_guard" \

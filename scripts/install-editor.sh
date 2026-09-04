@@ -26,11 +26,19 @@ if ! version_at_least "$nvim_version" '0.11.3'; then
 fi
 
 heading 'Neovim plugins'
-nvim --headless '+Lazy! restore' \
+nvim --headless \
+  '+lua assert(vim.fn.maparg(",ff", "n") ~= "", "missing first-use Telescope mapping: ,ff")' \
+  '+Lazy! restore' \
   '+lua local missing = {}; for name, plugin in pairs(require("lazy.core.config").plugins) do if plugin._.installed ~= true then table.insert(missing, name) end end; assert(#missing == 0, "missing plugins: " .. table.concat(missing, ", "))' \
   "$nvim_error_guard" \
   +qa
 if [ "$development" = '1' ]; then
   heading 'Neovim language tools'
   nvim --headless '+MasonToolsInstallSync' "$nvim_error_guard" +qa || warn 'Some editor language tools will finish installing when Neovim next opens.'
+
+  heading 'Neovim language server'
+  MACHINE_SETUP_LSP_PROBE_ROOT="$SOURCE_DIR" nvim --headless \
+    '+lua local root=assert(vim.env.MACHINE_SETUP_LSP_PROBE_ROOT); vim.api.nvim_buf_set_name(0, root.."/.machine-setup-lsp-probe.py"); vim.bo.filetype="python"; local attached=vim.wait(10000, function() for _,client in ipairs(vim.lsp.get_clients({bufnr=0})) do if client.name=="basedpyright" then return true end end return false end, 100); assert(attached, "basedpyright did not attach"); local client=assert(vim.lsp.get_clients({bufnr=0,name="basedpyright"})[1]); assert(client:supports_method("textDocument/definition", 0), "basedpyright lacks definition support"); assert(client:supports_method("textDocument/references", 0), "basedpyright lacks references support"); assert(vim.fn.maparg("gd","n")~="" and vim.fn.maparg("gr","n")~="", "LSP navigation mappings are missing")' \
+    "$nvim_error_guard" \
+    +qa
 fi
