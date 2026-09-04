@@ -219,10 +219,16 @@ fi
 
 if [ "$PROFILE_PLATFORM" = 'darwin' ]; then
   heading 'macOS'
-  if [ "${SHELL:-}" = '/opt/homebrew/bin/bash' ]; then
-    pass_check 'Homebrew Bash is the login shell'
+  configured_login_shell="$(dscl . -read "/Users/${USER}" UserShell 2>/dev/null | awk '{ print $2 }')"
+  if have brew; then
+    expected_login_shell="$(brew --prefix)/bin/bash"
   else
-    warn_check "Login shell is ${SHELL:-unknown}; a fresh login may be required"
+    expected_login_shell='/opt/homebrew/bin/bash'
+  fi
+  if [ "$configured_login_shell" = "$expected_login_shell" ]; then
+    pass_check "Homebrew Bash is the configured login shell (${configured_login_shell})"
+  else
+    warn_check "Configured login shell is ${configured_login_shell:-unknown}; expected ${expected_login_shell}"
   fi
   if [ "${MACHINE_SETUP_CI:-0}" = '0' ]; then
     initial_repeat="$(defaults read NSGlobalDomain InitialKeyRepeat 2>/dev/null || true)"
