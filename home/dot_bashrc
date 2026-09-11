@@ -72,33 +72,112 @@ if [ -r "$HOME/.config/machine-setup/local.bash" ]; then
   . "$HOME/.config/machine-setup/local.bash"
 fi
 
+_socks_proxy_macos_network_service() {
+  local default_interface
+
+  if [ -n "${MACHINE_SETUP_SOCKS_NETWORK_SERVICE:-}" ]; then
+    printf '%s\n' "$MACHINE_SETUP_SOCKS_NETWORK_SERVICE"
+    return
+  fi
+
+  default_interface="$(route -n get default 2>/dev/null | awk '$1 == "interface:" { print $2; exit }')"
+  if [ -z "$default_interface" ]; then
+    printf 'Could not determine the default macOS network interface. Set MACHINE_SETUP_SOCKS_NETWORK_SERVICE.\n' >&2
+    return 1
+  fi
+
+  networksetup -listnetworkserviceorder 2>/dev/null | awk -v device="$default_interface" '
+    /^\([0-9*]+\) / {
+      service = $0
+      sub(/^\([0-9*]+\) /, "", service)
+      next
+    }
+    index($0, "Device: " device ")") || index($0, "Device: " device ",") {
+      print service
+      found = 1
+      exit
+    }
+    END { if (!found) exit 1 }
+  ' || {
+    printf 'Could not find the macOS network service for %s. Set MACHINE_SETUP_SOCKS_NETWORK_SERVICE.\n' "$default_interface" >&2
+    return 1
+  }
+}
+
 socks-proxy() {
   local action="${1:-status}"
   local target="${MACHINE_SETUP_SOCKS_TARGET:-}"
   local port="${MACHINE_SETUP_SOCKS_PORT:-8080}"
   local control_dir="${XDG_RUNTIME_DIR:-$HOME/.local/state/machine-setup}"
   local control_socket="${control_dir}/socks-proxy.sock"
+  local network_service=''
+  local started_tunnel=0
 
   if [ -z "$target" ]; then
     printf 'No SOCKS target is configured. Edit ~/.config/machine-setup/local.bash.\n' >&2
     return 1
   fi
+  if [ "$(uname -s)" = 'Darwin' ]; then
+    network_service="$(_socks_proxy_macos_network_service)" || return
+  fi
   mkdir -p "$control_dir"
   case "$action" in
     on)
-      ssh -M -S "$control_socket" -fNT -D "127.0.0.1:${port}" "$target" || return
+      if ! ssh -S "$control_socket" -O check "$target" >/dev/null 2>&1; then
+        ssh -M -S "$control_socket" -fNT -D "127.0.0.1:${port}" "$target" || return
+        started_tunnel=1
+      fi
+      if [ -n "$network_service" ]; then
+        if ! sudo networksetup -setsocksfirewallproxy "$network_service" 127.0.0.1 "$port" ||
+          ! sudo networksetup -setsocksfirewallproxystate "$network_service" on; then
+          if [ "$started_tunnel" -eq 1 ]; then
+            ssh -S "$control_socket" -O exit "$target" >/dev/null 2>&1 || true
+          fi
+          printf 'Could not enable the SOCKS proxy for macOS network service %s.\n' "$network_service" >&2
+          return 1
+        fi
+      fi
       export ALL_PROXY="socks5h://127.0.0.1:${port}"
       export all_proxy="$ALL_PROXY"
-      printf 'SOCKS proxy started on 127.0.0.1:%s.\n' "$port"
+      if [ -n "$network_service" ]; then
+        printf 'SOCKS proxy started on 127.0.0.1:%s and enabled for %s.\n' "$port" "$network_service"
+      else
+        printf 'SOCKS proxy started on 127.0.0.1:%s.\n' "$port"
+      fi
       ;;
     off)
+      if [ -n "$network_service" ]; then
+        sudo networksetup -setsocksfirewallproxystate "$network_service" off || {
+          printf 'Could not disable the SOCKS proxy for macOS network service %s.\n' "$network_service" >&2
+          return 1
+        }
+      fi
       ssh -S "$control_socket" -O exit "$target" >/dev/null 2>&1 || true
       unset ALL_PROXY all_proxy
-      printf 'SOCKS proxy stopped.\n'
+      if [ -n "$network_service" ]; then
+        printf 'SOCKS proxy stopped and disabled for %s.\n' "$network_service"
+      else
+        printf 'SOCKS proxy stopped.\n'
+      fi
       ;;
     status)
       if ssh -S "$control_socket" -O check "$target" >/dev/null 2>&1; then
-        printf 'SOCKS proxy is running on 127.0.0.1:%s.\n' "$port"
+        if [ -n "$network_service" ]; then
+          if networksetup -getsocksfirewallproxy "$network_service" 2>/dev/null |
+            awk -v port="$port" '
+              $0 == "Enabled: Yes" { enabled = 1 }
+              $0 == "Server: 127.0.0.1" { server = 1 }
+              $0 == "Port: " port { configured_port = 1 }
+              END { exit !(enabled && server && configured_port) }
+            '; then
+            printf 'SOCKS proxy is running on 127.0.0.1:%s and enabled for %s.\n' "$port" "$network_service"
+          else
+            printf 'SOCKS tunnel is running, but the proxy setting for %s does not point to it.\n' "$network_service" >&2
+            return 1
+          fi
+        else
+          printf 'SOCKS proxy is running on 127.0.0.1:%s.\n' "$port"
+        fi
       else
         printf 'SOCKS proxy is stopped.\n'
         return 1

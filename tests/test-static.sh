@@ -10,6 +10,8 @@ $(find "$SOURCE_DIR" -path "$SOURCE_DIR/.git" -prune -o -type f -name '*.sh' -pr
 EOF
 bash -n "$SOURCE_DIR/home/dot_bash_profile" "$SOURCE_DIR/home/dot_bashrc"
 grep -Fq 'BASH_SILENCE_DEPRECATION_WARNING=1' "$SOURCE_DIR/home/dot_bash_profile"
+grep -Fq "networksetup -setsocksfirewallproxystate \"\$network_service\" on" "$SOURCE_DIR/home/dot_bashrc"
+grep -Fq "networksetup -setsocksfirewallproxystate \"\$network_service\" off" "$SOURCE_DIR/home/dot_bashrc"
 grep -Fq "chezmoi --source \"\$SOURCE_DIR\" apply --force --no-tty" "$SOURCE_DIR/setup.sh"
 grep -Fq '{ "folke/lazy.nvim", branch = "main" }' "$SOURCE_DIR/home/dot_config/nvim/lua/machine_setup/plugins.lua"
 grep -Fq 'rocks = { enabled = false }' "$SOURCE_DIR/home/dot_config/nvim/lua/machine_setup/lazy.lua"

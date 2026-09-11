@@ -29,6 +29,9 @@ their effects are explicit.
 - `.bashrc` initializes Homebrew, mise, direnv, fzf, Neovim, the prompt, and
   optional machine-local configuration.
 - `socks-proxy on|off|status` uses a target supplied in machine-local settings.
+  On macOS it also enables or disables the SOCKS proxy for the active network
+  service in System Settings. Set `MACHINE_SETUP_SOCKS_NETWORK_SERVICE` in
+  `~/.config/machine-setup/local.bash` to override automatic service detection.
 - `git-delete-merged` fetches and prunes, finds the remote default branch,
   excludes protected and current branches, shows the candidates, asks for
   confirmation, and uses non-forced deletion.
